@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-blue: #1488DB;
+  --color-navy: #030391;
+  --color-gray-light: #f5f5f5;
+  --color-gray-dark: #888888;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --container-max: 1200px;
+}
+
+html { scroll-behavior: smooth; }
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all .8s cubic-bezier(.16, 1, .3, 1);
+}
+.fade-up.visible { opacity: 1; transform: translateY(0); }
+
+.fade-in { opacity: 0; transition: opacity .8s ease; }
+.fade-in.visible { opacity: 1; }
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-bounce-custom { animation: bounce 2s infinite; }
+.animate-pop-in { animation: popIn .5s cubic-bezier(.68, -.55, .265, 1.55); }
+.animate-fade-in { animation: fadeIn .3s ease; }
+.animate-scale-in { animation: scaleIn .3s ease; }
+
+.hamburger span {
+  display: block;
+  width: 26px;
+  height: 3px;
+  background: #000;
+  border-radius: 3px;
+  transition: all .3s ease;
+}
+
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
