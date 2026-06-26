@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { I18nProvider } from './i18n'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import Countdown from './components/Countdown'
@@ -11,16 +12,16 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false)
 
   return (
-    <>
+    <I18nProvider>
       <Header onAdminClick={() => setAdminOpen(true)} />
       <main>
         <Hero />
         <Countdown />
-        <Gallery />
         <CheckinForm />
+        <Gallery />
       </main>
       <Footer />
       <AdminModal open={adminOpen} onClose={() => setAdminOpen(false)} />
-    </>
+    </I18nProvider>
   )
 }

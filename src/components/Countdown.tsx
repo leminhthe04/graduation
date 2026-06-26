@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { useI18n } from "../i18n";
+import { getField } from "../firebase/event";
+import type { TranslatableField } from "../firebase/event";
 
 const DEFAULT_DATE = "2026-08-15";
 const DEFAULT_TIME = "08:00";
-const DEFAULT_LOCATION = "Nhà hát lớn Hà Nội";
-const DEFAULT_TITLE = "Lễ Tốt Nghiệp";
-const DEFAULT_NOTES = "Hãy mang mã code để nhận quà bất ngờ! 🎁";
 
 function parseDate(date: string, time: string) {
   return new Date(`${date}T${time}:00+07:00`).getTime();
@@ -24,12 +24,14 @@ function calc(ms: number) {
 }
 
 export default function Countdown() {
+  const { t, lang } = useI18n();
   const [dateStr, setDateStr] = useState(DEFAULT_DATE);
   const [timeStr, setTimeStr] = useState(DEFAULT_TIME);
-  const [location, setLocation] = useState(DEFAULT_LOCATION);
-  const [title, setTitle] = useState(DEFAULT_TITLE);
-  const [notes, setNotes] = useState(DEFAULT_NOTES);
-  const [t, setT] = useState(() => calc(parseDate(DEFAULT_DATE, DEFAULT_TIME)));
+  const [location, setLocation] = useState<TranslatableField>({ vi: "" });
+  const [notes, setNotes] = useState<TranslatableField>({ vi: "" });
+  const [timer, setTimer] = useState(() =>
+    calc(parseDate(DEFAULT_DATE, DEFAULT_TIME)),
+  );
 
   const targetMsRef = useRef(parseDate(dateStr, timeStr));
 
@@ -41,7 +43,6 @@ export default function Countdown() {
           setDateStr(s.date);
           setTimeStr(s.time);
           setLocation(s.location);
-          setTitle(s.title);
           setNotes(s.notes);
         });
       })
@@ -51,17 +52,17 @@ export default function Countdown() {
   // update target when date/time change
   useEffect(() => {
     targetMsRef.current = parseDate(dateStr, timeStr);
-    setT(calc(targetMsRef.current));
+    setTimer(calc(targetMsRef.current));
   }, [dateStr, timeStr]);
 
   // tick every second
   useEffect(() => {
-    setT(calc(targetMsRef.current));
-    const id = setInterval(() => setT(calc(targetMsRef.current)), 1000);
+    setTimer(calc(targetMsRef.current));
+    const id = setInterval(() => setTimer(calc(targetMsRef.current)), 1000);
     return () => clearInterval(id);
   }, []);
 
-  if (t.done) {
+  if (timer.done) {
     return (
       <section className="py-20 bg-gray-light" id="countdown">
         <div
@@ -69,16 +70,16 @@ export default function Countdown() {
           style={{ maxWidth: "var(--container-max)" }}
         >
           <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2">
-            🎉 {title} ĐÃ DIỄN RA! 🎉
+            {t("countdown.ongoingTitle")}
           </h2>
           <p className="text-gray-dark text-lg mb-6">
-            Cảm ơn mọi người đã đến chúc mừng!
+            {t("countdown.doneMessage")}
           </p>
           <EventDetails
             date={dateStr}
             time={timeStr}
-            location={location}
-            notes={notes}
+            location={getField(location, lang)}
+            notes={getField(notes, lang)}
           />
         </div>
       </section>
@@ -92,19 +93,35 @@ export default function Countdown() {
         style={{ maxWidth: "var(--container-max)" }}
       >
         <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2">
-          ⏳ Còn
+          {t("countdown.remaining")}
         </h2>
 
         <div className="flex gap-6 justify-center flex-wrap mt-10">
           {[
-            { label: "Ngày", value: t.days },
-            { label: "Giờ", value: t.hours },
-            { label: "Phút", value: t.minutes },
-            { label: "Giây", value: t.seconds },
+            {
+              key: "countdown.days",
+              label: t("countdown.days"),
+              value: timer.days,
+            },
+            {
+              key: "countdown.hours",
+              label: t("countdown.hours"),
+              value: timer.hours,
+            },
+            {
+              key: "countdown.minutes",
+              label: t("countdown.minutes"),
+              value: timer.minutes,
+            },
+            {
+              key: "countdown.seconds",
+              label: t("countdown.seconds"),
+              value: timer.seconds,
+            },
           ].map((b) => (
             <div
               key={b.label}
-              className="bg-white rounded-2xl p-6 max-md:p-4 max-md:min-w-[70px] min-w-[100px] shadow-sm flex flex-col items-center transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(20,136,219,.15)]"
+              className="bg-white rounded-3xl p-6 max-md:p-4 max-md:min-w-[70px] min-w-[100px] shadow-sm flex flex-col items-center transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_12px_40px_rgba(20,136,219,.2)] active:scale-95"
             >
               <span className="text-5xl max-md:text-3xl font-black text-blue leading-none">
                 {String(b.value).padStart(2, "0")}
@@ -116,16 +133,16 @@ export default function Countdown() {
           ))}
         </div>
 
-        <p className="text-gray-dark text-lg mb-10 mt-10">
-          đến <strong>{title}</strong>!
-        </p>
+        <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2 mt-10">
+          {t("countdown.upcomingTitle")}
+        </h2>
 
         <div className="mt-12">
           <EventDetails
             date={dateStr}
             time={timeStr}
-            location={location}
-            notes={""}
+            location={getField(location, lang)}
+            notes={getField(notes, lang)}
           />
         </div>
       </div>
@@ -145,7 +162,7 @@ function EventDetails({
   notes: string;
 }) {
   return (
-    <div className="inline-flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center bg-white rounded-2xl px-8 py-5 shadow-sm mx-auto">
+    <div className="inline-flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center bg-white rounded-3xl px-7 py-5 shadow-sm mx-auto transition-all duration-300 hover:shadow-[0_8px_30px_rgba(20,136,219,.1)]">
       <div className="flex items-center gap-2">
         <span className="text-xl">📅</span>
         <span className="font-semibold text-sm">
@@ -153,16 +170,15 @@ function EventDetails({
         </span>
       </div>
       <div className="hidden sm:block w-px h-6 bg-gray-200" />
-      <div className="flex items-center gap-2">
-        <span className="text-xl">📍</span>
-        <span className="font-semibold text-sm">{location}</span>
+      <div className="flex items-center gap-1 max-w-[70%]">
+        <span className="font-semibold text-sm whitespace-pre-wrap break-words"><span className="text-xl">📍</span> {location}</span>
       </div>
       {notes && (
         <>
           <div className="hidden sm:block w-px h-6 bg-gray-200" />
           <div className="flex items-center gap-2">
-            <span className="text-xl">📌</span>
-            <span className="text-sm text-gray-dark">{notes}</span>
+            <span className="text-xl">📞</span>
+            <span className="font-semibold text-sm">{notes}</span>
           </div>
         </>
       )}
