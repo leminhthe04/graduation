@@ -81,6 +81,10 @@ export default function Gallery() {
     return () => observer.disconnect();
   }, [photos, uploadFiles]);
 
+  useEffect(() => {
+    if (viewMode === "carousel" && gridRef.current) gridRef.current.scrollLeft = 0;
+  }, [viewMode]);
+
   // ── Upload handlers ──
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
@@ -196,7 +200,7 @@ export default function Gallery() {
   }, [allUploaded]);
 
   return (
-    <section className="py-20 bg-gray-light" id="gallery" style={{ scrollMarginTop: 70 }}>
+    <section className="py-20 bg-gray-light overflow-x-hidden" id="gallery" style={{ scrollMarginTop: 70 }}>
       <div
         className="px-6 mx-auto"
         style={{ maxWidth: "var(--container-max)" }}
@@ -399,11 +403,11 @@ export default function Gallery() {
       )}
 
       {photos.length > 0 && viewMode === "carousel" && (
-        <div className="relative group/carousel px-6 py-6">
+        <div className="relative group/carousel px-6">
           <div
             ref={gridRef}
-            className="flex select-none"
-            style={{ cursor: "grab" }}
+            className="flex overflow-x-auto py-20 select-none w-full [&::-webkit-scrollbar]:hidden"
+            style={{ cursor: "grab", scrollbarWidth: "none", msOverflowStyle: "none" }}
             onMouseDown={(e) => {
               const el = gridRef.current;
               if (!el) return;
@@ -411,12 +415,11 @@ export default function Gallery() {
               const startX = e.pageX;
               const scrollLeft = el.scrollLeft;
               el.style.cursor = "grabbing";
-              el.style.scrollBehavior = "auto";
 
               const onMove = (ev: MouseEvent) => {
                 ev.preventDefault();
                 el.scrollLeft = scrollLeft + (startX - ev.pageX);
-                if (Math.abs(startX - ev.pageX) > 8) draggedRef.current = true;
+                if (Math.abs(ev.pageX - startX) > 8) draggedRef.current = true;
               };
 
               const onUp = () => {
@@ -514,23 +517,32 @@ export default function Gallery() {
           onClick={() => setSelected(null)}
         >
           <div
-            className="max-w-[800px] w-full bg-white rounded-2xl overflow-hidden relative animate-scale-in"
+            className="w-fit max-w-[90vw] bg-white rounded-2xl overflow-hidden relative animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-3 right-3 bg-black/50 text-white border-none rounded-full w-10 h-10 text-lg cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-black/80 hover:scale-110 active:scale-90 backdrop-blur-sm"
+              className="absolute top-3 right-3 bg-black/50 text-white border-none rounded-full w-10 h-10 text-lg cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-black/80 hover:scale-110 active:scale-90 backdrop-blur-sm z-10"
               onClick={() => setSelected(null)}
             >
               ✕
             </button>
-            <img
-              src={selected.url}
-              alt={selected.caption}
-              className="w-full max-h-[70vh] object-contain"
-            />
-            <p className="px-6 py-4 font-semibold text-center">
-              {selected.caption}
-            </p>
+            <div className="relative">
+              <img
+                src={selected.url}
+                alt={selected.caption}
+                className="max-h-[80vh] max-w-[90vw] w-auto h-auto object-contain"
+              />
+              {selected.nickname && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-sm px-4 py-3 text-center leading-tight pointer-events-none">
+                  gửi từ <strong>{selected.nickname}</strong>
+                </div>
+              )}
+            </div>
+            {selected.caption && (
+              <p className="px-6 py-4 font-semibold text-center">
+                {selected.caption}
+              </p>
+            )}
           </div>
         </div>
       )}

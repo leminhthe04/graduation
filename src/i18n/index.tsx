@@ -44,7 +44,7 @@ const translations: Record<Lang, Record<string, string>> = {
     "gallery.subtitle":
       "những tấm hình đẹp nhất trong ngày lễ tốt nghiệp của khoai",
     "gallery.uploadPrompt":
-      "gửi ảnh bạn đã chụp cùng khoai để lưu lại kỷ niệm nhaa 🫶",
+      "tải các ảnh bạn có trong buổi lễ để khoai lưu lại kỷ niệm nhaa 🫶",
     "gallery.dropHere": "kéo thả ảnh vào đây",
     "gallery.clickToSelect": "hoặc click để chọn ảnh",
     "gallery.uploadAll": "⬆️ tải lên tất cả",
