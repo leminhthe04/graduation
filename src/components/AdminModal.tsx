@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useI18n } from "../i18n";
 import {
   collection,
@@ -20,14 +20,14 @@ import {
 import { db, storage } from "../firebase/config";
 import {
   onEventSettings,
-  getEventSettings,
+  saveEventSettings,
   getEventDefault,
-  getHeroImage,
   onHeroImage,
   saveHeroImage,
   clearOldHeroImage,
 } from "../firebase/event";
 import type { EventSettings } from "../firebase/event";
+import { verifyAdmin, updateAdminPassword } from "../utils/auth";
 
 interface Checkin {
   id: string;
@@ -86,6 +86,20 @@ export default function AdminModal({
   const [heroProgress, setHeroProgress] = useState(0);
   const [heroDragOver, setHeroDragOver] = useState(false);
   const [heroSuccess, setHeroSuccess] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [previewIds, setPreviewIds] = useState<Set<string>>(new Set());
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [selectRect, setSelectRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const selectStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isDraggingRef = useRef(false);
+  const previewIdsRef = useRef<Set<string>>(new Set());
+  const shiftHeldRef = useRef(false);
+  const [lastClickedId, setLastClickedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authed) return;
@@ -130,8 +144,15 @@ export default function AdminModal({
     if (!open) {
       setAuthed(false);
       setPass("");
+      setSelectedIds(new Set());
+      setLastClickedId(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setLastClickedId(null);
+  }, [tab]);
 
   const [changingPass, setChangingPass] = useState(false);
   const [newPass, setNewPass] = useState("");
@@ -174,6 +195,150 @@ export default function AdminModal({
 
   const handleTogglePublic = async (id: string, current: boolean) => {
     await updateDoc(doc(db, "photos", id), { public: !current });
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const handleGridMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest("button")) return;
+    const rect = gridRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    selectStartRef.current = { x: e.clientX, y: e.clientY };
+    shiftHeldRef.current = e.shiftKey;
+    setSelectRect({
+      left: e.clientX - rect.left,
+      top: e.clientY - rect.top,
+      width: 0,
+      height: 0,
+    });
+
+    const handleMove = (ev: MouseEvent) => {
+      const start = selectStartRef.current;
+      if (!start || !gridRef.current) return;
+      const r = gridRef.current.getBoundingClientRect();
+      const left = Math.min(start.x, ev.clientX) - r.left;
+      const top = Math.min(start.y, ev.clientY) - r.top;
+      const width = Math.abs(ev.clientX - start.x);
+      const height = Math.abs(ev.clientY - start.y);
+      setSelectRect({ left, top, width, height });
+
+      if (Math.abs(ev.clientX - start.x) > 5 || Math.abs(ev.clientY - start.y) > 5) {
+        if (!isDraggingRef.current) {
+          isDraggingRef.current = true;
+          if (!shiftHeldRef.current) setSelectedIds(new Set());
+        }
+        const sel = {
+          left: Math.min(start.x, ev.clientX),
+          top: Math.min(start.y, ev.clientY),
+          right: Math.max(start.x, ev.clientX),
+          bottom: Math.max(start.y, ev.clientY),
+        };
+        const ids: string[] = [];
+        gridRef.current.querySelectorAll("[data-photo-id]").forEach((el) => {
+          const pr = el.getBoundingClientRect();
+          if (pr.left < sel.right && pr.right > sel.left && pr.top < sel.bottom && pr.bottom > sel.top) {
+            ids.push(el.getAttribute("data-photo-id")!);
+          }
+        });
+        setPreviewIds(new Set(ids));
+        previewIdsRef.current = new Set(ids);
+      }
+    };
+
+    const handleUp = (ev: MouseEvent) => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+
+      const start = selectStartRef.current;
+      if (!start || !gridRef.current) {
+        setSelectRect(null);
+        selectStartRef.current = null;
+        return;
+      }
+
+      if (Math.abs(ev.clientX - start.x) <= 5 && Math.abs(ev.clientY - start.y) <= 5) {
+        const el = document.elementFromPoint(ev.clientX, ev.clientY);
+        const photoEl = el?.closest("[data-photo-id]");
+        if (photoEl) {
+          const id = photoEl.getAttribute("data-photo-id")!;
+          if (ev.shiftKey && lastClickedId && lastClickedId !== id) {
+            const index1 = photos.findIndex(p => p.id === lastClickedId);
+            const index2 = photos.findIndex(p => p.id === id);
+            if (index1 !== -1 && index2 !== -1) {
+              const s = Math.min(index1, index2);
+              const e = Math.max(index1, index2);
+              const rangeIds = photos.slice(s, e + 1).map(p => p.id);
+              setSelectedIds((prev) => {
+                const next = new Set(prev);
+                rangeIds.forEach((rid) => next.add(rid));
+                return next;
+              });
+            }
+          } else {
+            setSelectedIds((prev) => {
+              const next = new Set(prev);
+              if (next.has(id)) next.delete(id);
+              else next.add(id);
+              return next;
+            });
+          }
+          setLastClickedId(id);
+        } else {
+          clearSelection();
+          setLastClickedId(null);
+        }
+      } else {
+        const newIds = previewIdsRef.current;
+        if (shiftHeldRef.current) {
+          setSelectedIds((prev) => {
+            if (newIds.size === 0) return prev;
+            const merged = new Set(prev);
+            newIds.forEach((id) => merged.add(id));
+            return merged;
+          });
+        } else if (newIds.size > 0) {
+          setSelectedIds(new Set(newIds));
+        }
+      }
+
+      setSelectRect(null);
+      selectStartRef.current = null;
+      isDraggingRef.current = false;
+      setPreviewIds(new Set());
+      previewIdsRef.current = new Set();
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+  };
+
+  const handleBulkApprove = async () => {
+    const promises = [...selectedIds].map(id => updateDoc(doc(db, "photos", id), { public: true }));
+    await Promise.all(promises);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkHide = async () => {
+    const promises = [...selectedIds].map(id => updateDoc(doc(db, "photos", id), { public: false }));
+    await Promise.all(promises);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Xóa ${selectedIds.size} ảnh đã chọn?`)) return;
+    const promises = [...selectedIds].map(async id => {
+      const p = photos.find(x => x.id === id);
+      if (p) {
+        await deleteDoc(doc(db, "photos", id));
+        try {
+          const storageRef = ref(storage, p.url);
+          await deleteObject(storageRef);
+        } catch {}
+      }
+    });
+    await Promise.all(promises);
+    setSelectedIds(new Set());
   };
 
   const WORDS = [
@@ -302,7 +467,7 @@ export default function AdminModal({
         style={{ top: '70px' }}
         onClick={onClose}
       />
-      <div className="flex items-center justify-center p-4 w-full h-full pointer-events-none">
+      <div className="relative z-10 flex items-center justify-center p-4 w-full h-full pointer-events-none">
         <div
           className="bg-white rounded-3xl w-full max-w-[900px] max-h-[85vh] overflow-y-auto animate-scale-in pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
@@ -379,22 +544,147 @@ export default function AdminModal({
 
             {tab === "event" && (
               <div className="max-w-lg mx-auto space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    {t('admin.eventName')}
-                  </label>
-                  <input
-                    value={eventSettings.title}
-                    onChange={(e) =>
-                      setEventSettings((p) => ({ ...p, title: e.target.value }))
-                    }
-                    className={`${inputCls} w-full`}
-                  />
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <span className="block text-sm font-black text-navy mb-2">🎓 {t('admin.eventName')}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Tiếng Việt (VI) *</label>
+                      <input
+                        value={eventSettings.title?.vi || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            title: { ...p.title, vi: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">English (EN - {t('admin.optional')})</label>
+                      <input
+                        value={eventSettings.title?.en || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            title: { ...p.title, en: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Français (FR - {t('admin.optional')})</label>
+                      <input
+                        value={eventSettings.title?.fr || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            title: { ...p.title, fr: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <span className="block text-sm font-black text-navy mb-2">📍 {t('admin.location')}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Tiếng Việt (VI) *</label>
+                      <input
+                        value={eventSettings.location?.vi || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            location: { ...p.location, vi: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">English (EN - {t('admin.optional')})</label>
+                      <input
+                        value={eventSettings.location?.en || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            location: { ...p.location, en: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Français (FR - {t('admin.optional')})</label>
+                      <input
+                        value={eventSettings.location?.fr || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            location: { ...p.location, fr: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                  <span className="block text-sm font-black text-navy mb-2">📝 {t('admin.notes')}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Tiếng Việt (VI) *</label>
+                      <textarea
+                        value={eventSettings.notes?.vi || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            notes: { ...p.notes, vi: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full resize-none`}
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">English (EN - {t('admin.optional')})</label>
+                      <textarea
+                        value={eventSettings.notes?.en || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            notes: { ...p.notes, en: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full resize-none`}
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-dark mb-1">Français (FR - {t('admin.optional')})</label>
+                      <textarea
+                        value={eventSettings.notes?.fr || ''}
+                        onChange={(e) =>
+                          setEventSettings((p) => ({
+                            ...p,
+                            notes: { ...p.notes, fr: e.target.value }
+                          }))
+                        }
+                        className={`${inputCls} w-full resize-none`}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold mb-1">
                     {t('admin.date')}
-                   
                   </label>
                   <input
                     type="date"
@@ -408,7 +698,6 @@ export default function AdminModal({
                 <div>
                   <label className="block text-sm font-semibold mb-1">
                     {t('admin.time')}
-                   
                   </label>
                   <input
                     type="time"
@@ -419,36 +708,7 @@ export default function AdminModal({
                     className={`${inputCls} w-full`}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    {t('admin.location')}
-                   
-                  </label>
-                  <input
-                    value={eventSettings.location}
-                    onChange={(e) =>
-                      setEventSettings((p) => ({
-                        ...p,
-                        location: e.target.value,
-                      }))
-                    }
-                    className={`${inputCls} w-full`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    {t('admin.notes')}
-                   
-                  </label>
-                  <textarea
-                    value={eventSettings.notes}
-                    onChange={(e) =>
-                      setEventSettings((p) => ({ ...p, notes: e.target.value }))
-                    }
-                    className={`${inputCls} w-full resize-none`}
-                    rows={3}
-                  />
-                </div>
+
                 <div className="text-center pt-2">
                   <button
                     className={btnPrimary}
@@ -458,7 +718,6 @@ export default function AdminModal({
                     {saving ? t('admin.saving') : t('admin.save')}
                   </button>
                 </div>
-
               </div>
             )}
 
@@ -639,42 +898,119 @@ export default function AdminModal({
 
             {tab === "photos" && (
               <div>
-                <div className="flex flex-wrap gap-3">
-                  {photos.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`relative rounded-xl overflow-hidden shadow-md group flex-shrink-0 ${!p.public ? "opacity-60" : ""}`}
-                    >
-                      <img
-                        src={p.url}
-                        alt={p.caption}
-                        className="h-44 w-auto max-w-none"
-                      />
-                      <div className="absolute top-2 left-2">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${p.public ? "bg-green-500 text-white" : "bg-yellow-500 text-white"}`}
-                        >
-                          {p.public ? "Public" : "Pending"}
-                        </span>
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white text-xs font-semibold flex flex-wrap gap-1">
-                        <span className="w-full">{p.caption}</span>
-                        <button
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-none cursor-pointer transition-all ${p.public ? "bg-yellow-500 text-white hover:bg-yellow-600" : "bg-green-500 text-white hover:bg-green-600"}`}
-                          onClick={() => handleTogglePublic(p.id, p.public)}
-                        >
-                          {p.public ? "🔒 Ẩn" : "✅ Duyệt"}
-                        </button>
-                        <button
-                          className={btnDanger}
-                          style={{ padding: ".2rem .5rem", fontSize: ".7rem" }}
-                          onClick={() => handleDeletePhoto(p.id, p.url)}
-                        >
-                          🗑
-                        </button>
-                      </div>
+                {/* Bulk action bar */}
+                {(selectedIds.size > 0 || previewIds.size > 0) && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-blue/10 border border-blue/20 rounded-2xl p-4 mb-5 animate-slide-up">
+                    <span className="text-navy font-bold text-sm">
+                      {previewIds.size > 0
+                        ? `⚡ Đang chọn ${previewIds.size} ảnh`
+                        : `⚡ Đã chọn ${selectedIds.size} ảnh`}
+                    </span>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={handleBulkApprove}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold bg-green-500 hover:bg-green-600 text-white cursor-pointer border-none active:scale-95 transition-all"
+                      >
+                        ✅ Duyệt hàng loạt
+                      </button>
+                      <button
+                        onClick={handleBulkHide}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer border-none active:scale-95 transition-all"
+                      >
+                        🔒 Ẩn hàng loạt
+                      </button>
+                      <button
+                        onClick={handleBulkDelete}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-500 hover:bg-red-600 text-white cursor-pointer border-none active:scale-95 transition-all"
+                      >
+                        🗑 Xóa hàng loạt
+                      </button>
+                      <button
+                        onClick={() => setSelectedIds(new Set())}
+                        className="px-4 py-1.5 rounded-full text-xs font-semibold bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer border-none active:scale-95 transition-all"
+                      >
+                        Bỏ chọn
+                      </button>
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                <div
+                  ref={gridRef}
+                  className="flex flex-wrap gap-3 relative select-none"
+                  onMouseDown={handleGridMouseDown}
+                >
+                  {photos.map((p) => {
+                    const selected = selectedIds.has(p.id);
+                    const previewed = previewIds.has(p.id);
+                    return (
+                      <div
+                        key={p.id}
+                        data-photo-id={p.id}
+                        className={`relative rounded-xl overflow-hidden shadow-md group flex-shrink-0 transition-all cursor-pointer ${
+                          selected
+                            ? "ring-4 ring-blue scale-[0.98] brightness-[0.85]"
+                            : previewed
+                            ? "ring-2 ring-blue/50"
+                            : "hover:scale-[1.01]"
+                        } ${!p.public && !selected && !previewed ? "opacity-70" : ""}`}
+                      >
+                        <img
+                          src={p.url}
+                          alt={p.caption}
+                          draggable={false}
+                          className="h-44 w-auto max-w-none pointer-events-none"
+                        />
+                        
+                        {/* Checkbox indicator */}
+                        <div className="absolute top-2 right-2 z-10 pointer-events-none">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all text-xs font-bold ${
+                            selected
+                              ? "bg-blue border-blue text-white shadow-md scale-110"
+                              : "bg-black/40 border-white/60 text-transparent opacity-0 group-hover:opacity-100"
+                          }`}>
+                            ✓
+                          </div>
+                        </div>
+
+                        <div className="absolute top-2 left-2">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${p.public ? "bg-green-500 text-white" : "bg-yellow-500 text-white"}`}
+                          >
+                            {p.public ? "Public" : "Pending"}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white text-xs font-semibold flex flex-wrap gap-1">
+                          <span className="w-full truncate">{p.caption || "Không có chú thích"}</span>
+                          <button
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-none cursor-pointer transition-all ${p.public ? "bg-yellow-500 text-white hover:bg-yellow-600" : "bg-green-500 text-white hover:bg-green-600"}`}
+                            onClick={(e) => { e.stopPropagation(); handleTogglePublic(p.id, p.public); }}
+                          >
+                            {p.public ? "🔒 Ẩn" : "✅ Duyệt"}
+                          </button>
+                          <button
+                            className={btnDanger}
+                            style={{ padding: ".2rem .5rem", fontSize: ".7rem" }}
+                            onClick={(e) => { e.stopPropagation(); handleDeletePhoto(p.id, p.url); }}
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {selectRect && (
+                    <div
+                      className="absolute bg-blue/20 border-2 border-blue rounded-lg pointer-events-none z-50"
+                      style={{
+                        left: selectRect.left,
+                        top: selectRect.top,
+                        width: selectRect.width,
+                        height: selectRect.height,
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             )}
