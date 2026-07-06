@@ -55,7 +55,7 @@ interface Code {
 type Tab = "checkins" | "photos" | "codes" | "event" | "password" | "hero";
 
 const btn =
-  "inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold font-sans text-sm cursor-pointer transition-all duration-300 relative overflow-hidden active:scale-95";
+  "inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold font-sans text-sm cursor-pointer transition-all duration-300 relative overflow-hidden active:scale-95 whitespace-nowrap";
 const btnPrimary = `${btn} bg-blue text-white hover:bg-navy hover:shadow-[0_6px_20px_rgba(20,136,219,.4)] hover:-translate-y-0.5`;
 const btnOutline = `${btn} bg-transparent text-blue border-2 border-blue hover:bg-blue hover:text-white hover:shadow-[0_6px_20px_rgba(20,136,219,.25)] hover:-translate-y-0.5`;
 const btnDanger = `${btn} bg-[#e74c3c] text-white hover:bg-[#c0392b] hover:shadow-[0_6px_20px_rgba(231,76,60,.4)] hover:-translate-y-0.5`;
@@ -183,6 +183,16 @@ export default function AdminModal({
 
   const handleConfirm = async (id: string, current: boolean) => {
     await updateDoc(doc(db, "checkins", id), { confirmed: !current });
+  };
+
+  const handleDeleteCheckin = async (id: string) => {
+    if (!confirm("Xóa check-in này?")) return;
+    await deleteDoc(doc(db, "checkins", id));
+  };
+
+  const handleDeleteCode = async (id: string) => {
+    if (!confirm("Xóa mã này?")) return;
+    await deleteDoc(doc(db, "secret_codes", id));
   };
 
   const handleDeletePhoto = async (id: string, url: string) => {
@@ -503,7 +513,7 @@ export default function AdminModal({
           </div>
         ) : (
           <div className="p-6">
-            <div className="flex gap-2 justify-center mb-6 flex-wrap">
+            <div className="flex gap-1 justify-center mb-6 flex-nowrap overflow-x-auto text-sm">
               <button
                 className={`${tab === "event" ? btnPrimary : btnOutline}`}
                 onClick={() => setTab("event")}
@@ -515,6 +525,12 @@ export default function AdminModal({
                 onClick={() => setTab("hero")}
               >
                 {t('admin.tab.hero')}
+              </button>
+              <button
+                className={`${tab === "codes" ? btnPrimary : btnOutline}`}
+                onClick={() => setTab("codes")}
+              >
+                {t('admin.tab.codes')} ({codes.length})
               </button>
               <button
                 className={`${tab === "checkins" ? btnPrimary : btnOutline}`}
@@ -529,14 +545,9 @@ export default function AdminModal({
                 {t('admin.tab.photos')} ({photos.length})
               </button>
               <button
-                className={`${tab === "codes" ? btnPrimary : btnOutline}`}
-                onClick={() => setTab("codes")}
-              >
-                {t('admin.tab.codes')} ({codes.length})
-              </button>
-              <button
                 className={`${tab === "password" ? btnPrimary : btnOutline}`}
-                onClick={() => setTab("password")}
+                onClick={() => setTab("password")
+                }
               >
                 {t('admin.tab.password')}
               </button>
@@ -878,16 +889,25 @@ export default function AdminModal({
                           {c.confirmed ? "✅" : "❌"}
                         </td>
                         <td className="p-3 border-b border-gray-100">
-                          <button
-                            className={btnOutline}
-                            style={{
-                              padding: ".3rem .7rem",
-                              fontSize: ".8rem",
-                            }}
-                            onClick={() => handleConfirm(c.id, c.confirmed)}
-                          >
-                            {c.confirmed ? "Hoàn tác" : "Xác nhận"}
-                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              className={btnOutline}
+                              style={{
+                                padding: ".3rem .7rem",
+                                fontSize: ".8rem",
+                              }}
+                              onClick={() => handleConfirm(c.id, c.confirmed)}
+                            >
+                              {c.confirmed ? "Hoàn tác" : "Xác nhận"}
+                            </button>
+                            <button
+                              className={btnDanger}
+                              style={{ padding: ".3rem .7rem", fontSize: ".8rem" }}
+                              onClick={() => handleDeleteCheckin(c.id)}
+                            >
+                              🗑
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1090,6 +1110,9 @@ export default function AdminModal({
                         <th className="p-3 text-left font-bold text-navy border-b border-gray-200">
                           Email
                         </th>
+                        <th className="p-3 text-left font-bold text-navy border-b border-gray-200">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1109,6 +1132,15 @@ export default function AdminModal({
                           </td>
                           <td className="p-3 border-b border-gray-100">
                             {c.email || "-"}
+                          </td>
+                          <td className="p-3 border-b border-gray-100">
+                            <button
+                              className={btnDanger}
+                              style={{ padding: ".3rem .7rem", fontSize: ".8rem" }}
+                              onClick={() => handleDeleteCode(c.id)}
+                            >
+                              🗑
+                            </button>
                           </td>
                         </tr>
                       ))}
