@@ -399,15 +399,11 @@ export default function Gallery() {
       )}
 
       {photos.length > 0 && viewMode === "carousel" && (
-        <div className="relative group/carousel px-6">
+        <div className="relative group/carousel px-6 py-6">
           <div
             ref={gridRef}
-            className="flex gap-8 overflow-x-auto pb-8 select-none"
-            style={{
-              scrollbarWidth: "thin",
-              scrollbarColor: "#1488DB #e5e7eb",
-              cursor: "grab",
-            }}
+            className="flex select-none"
+            style={{ cursor: "grab" }}
             onMouseDown={(e) => {
               const el = gridRef.current;
               if (!el) return;
@@ -436,23 +432,25 @@ export default function Gallery() {
             {photos.map((p) => (
               <div
                 key={p.id}
-                className="relative rounded-2xl cursor-pointer flex-shrink-0 shadow-md transition-all duration-400 group snap-start z-0 hover:z-10"
+                className="relative cursor-pointer flex-shrink-0 transition-all duration-400 group snap-start z-0 hover:z-50"
                 onClick={() => {
                   if (!draggedRef.current) setSelected(p);
                 }}
               >
-                <img
-                  src={p.url}
-                  alt={p.caption}
-                  loading="lazy"
-                  draggable={false}
-                  className="h-[35vh] max-h-[260px] w-auto rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:shadow-2xl"
-                />
-                {p.nickname && (
-                  <div className="mt-1 text-xs text-center text-gray-dark">
-                    tải từ <strong>{p.nickname}</strong>
-                  </div>
-                )}
+                <div className="relative transition-transform duration-300 group-hover:scale-[1.15]">
+                  <img
+                    src={p.url}
+                    alt={p.caption}
+                    loading="lazy"
+                    draggable={false}
+                    className="h-[30vh] max-h-[220px] w-auto"
+                  />
+                  {p.nickname && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[11px] px-3 py-2 text-center leading-tight pointer-events-none">
+                      tải từ <strong>{p.nickname}</strong>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -482,21 +480,23 @@ export default function Gallery() {
           {photos.map((p) => (
             <div
               key={p.id}
-              className="cursor-pointer relative z-0 hover:z-20 transition-all duration-200"
+              className="cursor-pointer relative z-0 hover:z-50 transition-all duration-200"
               onClick={() => setSelected(p)}
             >
-              <img
-                src={p.url}
-                alt={p.caption}
-                loading="lazy"
-                draggable={false}
-                className="max-h-[30vh] w-auto transition-transform duration-200 hover:scale-[1.1] hover:shadow-2xl"
-              />
-              {p.nickname && (
-                <div className="text-xs text-center text-gray-dark pb-1">
-                  tải từ <strong>{p.nickname}</strong>
-                </div>
-              )}
+              <div className="relative transition-transform duration-200 hover:scale-[1.15]">
+                <img
+                  src={p.url}
+                  alt={p.caption}
+                  loading="lazy"
+                  draggable={false}
+                  className="max-h-[30vh] w-auto"
+                />
+                {p.nickname && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[11px] px-3 py-2 text-center leading-tight pointer-events-none">
+                    tải từ <strong>{p.nickname}</strong>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
