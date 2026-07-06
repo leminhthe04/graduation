@@ -41,7 +41,7 @@ export default function Header({ onAdminClick }: { onAdminClick: () => void }) {
       <div className="h-full flex items-center justify-between px-6 mx-auto" style={{ maxWidth: 'var(--container-max)' }}>
         <button 
           onClick={scrollToHero} 
-          className="text-lg font-black text-navy hover:text-blue transition-all duration-300 tracking-tight cursor-pointer bg-transparent border-none hover:scale-105 active:scale-95"
+          className="text-lg font-black text-navy hover:text-blue transition-all duration-300 tracking-tight cursor-pointer bg-transparent border-none hover-lift"
         >
           {t('brand')}
         </button>
@@ -49,7 +49,7 @@ export default function Header({ onAdminClick }: { onAdminClick: () => void }) {
         <div className="flex items-center gap-4">
           <button
             onClick={onAdminClick}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-gray-dark hover:text-blue transition-all duration-300 cursor-pointer text-lg active:scale-90 hover:scale-110 shadow-sm backdrop-blur-md"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-gray-dark hover:text-blue transition-all duration-300 cursor-pointer text-lg active:scale-90 hover:scale-110 shadow-sm backdrop-blur-md hover-jello"
             title={t('potato.title')}
           >
             🥔

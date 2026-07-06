@@ -72,7 +72,11 @@ export default function Gallery() {
     const observer = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("visible");
+          if (e.isIntersecting) {
+            e.target.classList.add("visible");
+          } else {
+            e.target.classList.remove("visible");
+          }
         }),
       { threshold: 0.1 },
     );
@@ -206,13 +210,13 @@ export default function Gallery() {
         style={{ maxWidth: "var(--container-max)" }}
       >
         <div className="text-center mb-8">
-          <h1 className="text-[clamp(2rem,6vw,3rem)] font-black text-navy">
+          <h1 className="text-[clamp(2rem,6vw,3rem)] font-black text-navy blur-reveal">
             {t("gallery.title")}
           </h1>
-          <p className="text-gray-dark text-lg max-w-[600px] mx-auto mt-1">
+          <p className="text-gray-dark text-lg max-w-[600px] mx-auto mt-1 fade-up">
             {t("gallery.subtitle")}
           </p>
-          <p className="text-gray-dark/70 text-base max-w-[2000px] mx-auto mt-1">
+          <p className="text-gray-dark/70 text-base max-w-[2000px] mx-auto mt-1 slide-up">
             {t("gallery.uploadPrompt")}
           </p>
         </div>
@@ -223,7 +227,7 @@ export default function Gallery() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={handleSelect}
-          className={`relative border-2 border-dashed rounded-3xl p-4 text-center cursor-pointer transition-all duration-500 mb-10 max-w-2xl mx-auto ${
+          className={`relative border-2 border-dashed rounded-3xl p-4 text-center cursor-pointer transition-all duration-500 mb-10 max-w-2xl mx-auto hover-glow ${
             dragging
               ? "border-blue bg-blue/10 scale-[1.01] glass-panel-heavy grayscale saturate-0 contrast-75 blur-[0.5px]"
               : "border-white/30 hover:border-blue glass-panel hover:bg-white/50"
@@ -237,7 +241,7 @@ export default function Gallery() {
             className="hidden"
             onChange={handleInputChange}
           />
-          <div className="text-4xl mb-3">📸</div>
+          <div className="text-4xl mb-3"></div>
           <p className="text-base font-semibold text-navy mb-1">
             {t("gallery.dropHere")}
           </p>
@@ -403,7 +407,7 @@ export default function Gallery() {
       )}
 
       {photos.length > 0 && viewMode === "carousel" && (
-        <div className="relative group/carousel px-6 md:pl-28 md:pr-28">
+        <div key="carousel" className="relative group/carousel px-6 md:pl-28 md:pr-28 animate-fade-in-slow">
           <div
             ref={gridRef}
             className="flex overflow-x-auto py-20 select-none w-full [&::-webkit-scrollbar]:hidden"
@@ -440,13 +444,13 @@ export default function Gallery() {
                   if (!draggedRef.current) setSelected(p);
                 }}
               >
-                <div className="relative transition-transform duration-300 group-hover:scale-[1.15]">
+                <div className="relative transition-transform duration-300 group-hover:scale-[1.15] group-hover:rotate-1">
                   <img
                     src={p.url}
                     alt={p.caption}
                     loading="lazy"
                     draggable={false}
-                    className="h-[30vh] max-h-[220px] w-auto"
+                    className="h-[30vh] max-h-[220px] w-auto transition-all duration-500 group-hover:brightness-110 group-hover:contrast-105"
                   />
                   {p.nickname && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[11px] px-3 py-2 text-center leading-tight pointer-events-none">
@@ -460,20 +464,20 @@ export default function Gallery() {
         </div>
       )}
       {photos.length > 0 && viewMode === "grid" && (
-        <div className="flex flex-wrap justify-center px-6 md:pl-25 md:pr-25">
+        <div key="grid" className="flex flex-wrap justify-center px-6 md:pl-25 md:pr-25 animate-fade-in-slow">
           {photos.map((p) => (
             <div
               key={p.id}
               className="cursor-pointer relative z-0 hover:z-50 transition-all duration-200"
               onClick={() => setSelected(p)}
             >
-              <div className="relative transition-transform duration-200 hover:scale-[1.15]">
+              <div className="relative transition-transform duration-200 hover:scale-[1.15] hover:rotate-1">
                 <img
                   src={p.url}
                   alt={p.caption}
                   loading="lazy"
                   draggable={false}
-                  className="max-h-[30vh] w-auto"
+                  className="max-h-[30vh] w-auto transition-all duration-500 hover:brightness-110 hover:contrast-105"
                 />
                 {p.nickname && (
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[11px] px-3 py-2 text-center leading-tight pointer-events-none">

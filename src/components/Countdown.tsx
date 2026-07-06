@@ -32,8 +32,6 @@ export default function Countdown() {
   const [timer, setTimer] = useState(() =>
     calc(parseDate(DEFAULT_DATE, DEFAULT_TIME)),
   );
-  const sectionRef = useRef<HTMLElement>(null);
-  const [visible, setVisible] = useState(false);
 
   const targetMsRef = useRef(parseDate(dateStr, timeStr));
 
@@ -64,34 +62,18 @@ export default function Countdown() {
     return () => clearInterval(id);
   }, []);
 
-  // scroll reveal
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const sectionClass = `transition-all duration-700 ${
-    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-  }`;
-
   if (timer.done) {
     return (
-      <section ref={sectionRef} className="py-20 relative overflow-hidden" id="countdown">
+      <section className="py-20 relative overflow-hidden" id="countdown">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 -left-40 w-72 h-72 bg-blue/10 rounded-full blur-3xl animate-blob-1" />
           <div className="absolute bottom-0 -right-40 w-80 h-80 bg-navy/8 rounded-full blur-3xl animate-blob-2" />
         </div>
-        <div className={`${sectionClass} px-6 mx-auto text-center`} style={{ maxWidth: "var(--container-max)" }}>
-          <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2">
+        <div className="px-6 mx-auto text-center" style={{ maxWidth: "var(--container-max)" }}>
+          <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2 animate-text-shimmer">
             {t("countdown.ongoingTitle")}
           </h2>
-          <p className="text-gray-dark text-lg mb-6">
+          <p className="text-gray-dark text-lg mb-6 bounce-reveal">
             {t("countdown.doneMessage")}
           </p>
           <EventDetails
@@ -106,32 +88,28 @@ export default function Countdown() {
   }
 
   return (
-    <section ref={sectionRef} className="py-20 relative overflow-hidden" id="countdown">
+    <section className="py-20 relative overflow-hidden" id="countdown">
       {/* Blob background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 -left-40 w-72 h-72 bg-blue/10 rounded-full blur-3xl animate-blob-1" />
         <div className="absolute bottom-0 -right-40 w-80 h-80 bg-navy/8 rounded-full blur-3xl animate-blob-2" />
       </div>
 
-      <div
-        className={`${sectionClass} flex-col px-6 mx-auto text-center`}
-        style={{ maxWidth: "var(--container-max)" }}
-      >
-          <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2">
-            {t("countdown.remaining")}
-          </h2>
+      <div className="flex-col px-6 mx-auto text-center" style={{ maxWidth: "var(--container-max)" }}>
+        <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2 blur-reveal">
+          {t("countdown.remaining")}
+        </h2>
 
-          <div className="flex gap-6 justify-center flex-wrap mt-10">
+          <div className="flex gap-6 justify-center flex-wrap mt-10 stagger-children">
             {[
               { key: "countdown.days", label: t("countdown.days"), value: timer.days },
               { key: "countdown.hours", label: t("countdown.hours"), value: timer.hours },
               { key: "countdown.minutes", label: t("countdown.minutes"), value: timer.minutes },
               { key: "countdown.seconds", label: t("countdown.seconds"), value: timer.seconds },
-            ].map((b, i) => (
+            ].map((b) => (
               <div
                 key={b.label}
-                className="glass-card rounded-3xl p-6 max-md:p-4 max-md:min-w-[70px] min-w-[100px] flex flex-col items-center"
-                style={{ transitionDelay: `${i * 0.1}s` }}
+                className="glass-card rounded-3xl p-6 max-md:p-4 w-[100px] max-md:w-[70px] flex flex-col items-center hover-float"
               >
                 <span className="text-5xl max-md:text-3xl font-black text-blue leading-none">
                   {String(b.value).padStart(2, "0")}
@@ -143,11 +121,11 @@ export default function Countdown() {
             ))}
           </div>
 
-          <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2 mt-10">
+          <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-navy mb-2 mt-10 fade-up">
             {t("countdown.upcomingTitle")}
           </h2>
 
-          <div className="mt-12">
+          <div className="mt-12 slide-up">
             <EventDetails
               date={dateStr}
               time={timeStr}
@@ -172,22 +150,23 @@ function EventDetails({
   notes: string;
 }) {
   return (
-    <div className="glass-panel inline-flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center rounded-3xl px-7 py-5 mx-auto">
+    <div className="glass-panel inline-flex flex-col sm:flex-row gap-4 sm:gap-8 items-center justify-center rounded-3xl px-7 py-5 mx-auto fade-up">
       <div className="flex items-center gap-2">
-        <span className="text-xl">📅</span>
+        <span className="text-xl animate-wave">📅</span>
         <span className="font-semibold text-sm">
           {date} • {time}
         </span>
       </div>
       <div className="hidden sm:block w-px h-6 bg-white/30" />
       <div className="flex items-center gap-1 max-w-[70%]">
-        <span className="font-semibold text-sm whitespace-pre-wrap break-words"><span className="text-xl">📍</span> {location}</span>
+        <span className="text-xl animate-wave" style={{ animationDelay: '-0.5s' }}>📍</span>
+        <span className="font-semibold text-sm whitespace-pre-wrap break-words">{location}</span>
       </div>
       {notes && (
         <>
           <div className="hidden sm:block w-px h-6 bg-white/30" />
           <div className="flex items-center gap-2">
-            <span className="text-xl">📞</span>
+            <span className="text-xl animate-wave" style={{ animationDelay: '-1s' }}>📞</span>
             <span className="font-semibold text-sm">{notes}</span>
           </div>
         </>

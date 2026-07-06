@@ -66,10 +66,10 @@ export default function LeftNav() {
       onWheel={handleWheel}
     >
       {/* 3D Wheel Container */}
-      <div className="glass-panel w-18 h-[260px] rounded-full flex flex-col justify-center items-center relative overflow-hidden wheel-container py-4 shadow-[0_12px_40px_rgba(20,136,219,0.15)] border border-white/40">
+      <div className="glass-panel w-18 h-[260px] rounded-full flex flex-col justify-center items-center relative overflow-hidden wheel-container py-4 shadow-[0_12px_40px_rgba(20,136,219,0.15)] border border-white/40 hover-glow">
         
         {/* Stationary Highlight Capsule (Liquid Glass Bubble) */}
-        <div className="absolute w-14 h-14 bg-blue/15 backdrop-blur-[2px] rounded-2xl border border-blue/30 shadow-[0_0_15px_rgba(20,136,219,0.15)] pointer-events-none transition-all duration-500 ease-out top-1/2 -translate-y-1/2" />
+        <div className="absolute w-14 h-14 bg-blue/15 backdrop-blur-[2px] rounded-full border border-blue/30 shadow-[0_0_15px_rgba(20,136,219,0.15)] pointer-events-none transition-all duration-500 ease-out top-1/2 -translate-y-1/2" />
         
         {/* Sliding Wheel List */}
         <div 

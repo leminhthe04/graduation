@@ -46,7 +46,11 @@ export default function CheckinForm() {
     const observer = new IntersectionObserver(
       (entries) =>
         entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("visible");
+          if (e.isIntersecting) {
+            e.target.classList.add("visible");
+          } else {
+            e.target.classList.remove("visible");
+          }
         }),
       { threshold: 0.2 },
     );
@@ -154,14 +158,14 @@ export default function CheckinForm() {
           style={{ maxWidth: "var(--container-max)" }}
         >
           <div className="max-w-[520px] mx-auto glass-panel-heavy rounded-3xl p-9 max-md:p-8 fade-in visible">
-            <div className="text-6xl mb-4 animate-pop-in">🎉</div>
-            <h2 className="text-2xl font-black mb-4">{t('checkin.success')}</h2>
+            <div className="text-6xl mb-4 animate-pop-in animate-heartbeat">🎉</div>
+            <h2 className="text-2xl font-black mb-4 text-gradient">{t('checkin.success')}</h2>
             <p className="mb-4">{t('checkin.yourCode')}</p>
-            <div className="relative text-2xl font-black tracking-[4px] text-navy bg-white/70 backdrop-blur-sm p-4 pr-11 rounded-2xl my-4 font-mono select-all text-left border border-white/40">
+            <div className="relative text-2xl font-black tracking-[4px] text-navy bg-white/70 backdrop-blur-sm p-4 pr-11 rounded-2xl my-4 font-mono select-all text-left border border-white/40 hover-glow">
               {result.code}
               <button
                 onClick={handleCopy}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-lg transition-all duration-300 active:scale-90 hover:bg-white/70"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full text-lg transition-all duration-300 active:scale-90 hover:bg-white/70 hover-pop"
                 title={t('checkin.copyTitle')}
               >
                 {copied ? (
@@ -202,10 +206,10 @@ export default function CheckinForm() {
         className="px-6 mx-auto "
         style={{ maxWidth: "var(--container-max)" }}
       >
-        <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-center text-navy mb-2 fade-up">
+        <h2 className="text-[clamp(1.75rem,5vw,2.5rem)] font-black text-center text-navy mb-2 slide-up">
           {t('checkin.title')}
         </h2>
-        <p className="text-center text-gray-dark text-lg mb-12 fade-up">
+        <p className="text-center text-gray-dark text-lg mb-12 slide-up">
           {t('checkin.description')}
         </p>
 
@@ -228,11 +232,11 @@ export default function CheckinForm() {
         )} */}
 
         <form
-          className="max-w-[480px] mx-auto glass-panel-heavy rounded-2xl p-10 max-md:p-6 fade-up"
+          className="max-w-[480px] mx-auto glass-panel-heavy rounded-2xl p-10 max-md:p-6 scale-reveal"
           onSubmit={handleSubmit}
         >
           {error && (
-            <div className="bg-[#fee] text-[#c00] p-3 rounded-xl mb-4 font-medium text-sm">
+            <div className="bg-[#fee] text-[#c00] p-3 rounded-xl mb-4 font-medium text-sm animate-shake">
               {t(error.key, error.vars)}
             </div>
           )}
@@ -244,7 +248,7 @@ export default function CheckinForm() {
                 placeholder={t('checkin.nicknamePlaceholder')}
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input"
+                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input input-glow"
               />
           </div>
 
@@ -257,13 +261,13 @@ export default function CheckinForm() {
                 placeholder={t('checkin.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input"
+                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input input-glow"
               />
           </div>
 
           <button
             type="submit"
-            className="glass-btn-primary w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold font-sans text-base disabled:opacity-50 disabled:pointer-events-none"
+            className="glass-btn-primary w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold font-sans text-base disabled:opacity-50 disabled:pointer-events-none hover-glow-strong btn-press"
             disabled={loading}
           >
             {loading ? t('checkin.loading') : t('checkin.getCode')}
