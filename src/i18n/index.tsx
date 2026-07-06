@@ -85,7 +85,7 @@ const translations: Record<Lang, Record<string, string>> = {
       "ối dồi ôi! email có code bí mật rồi mà còn đòi thêm nữa hả?? về kiểm tra hòm thư (hoặc spam) của bạn điii, đừng có tham nha 🧐",
 
     "footer.text": "🎓 tạo bởi tình iu cho ngày tốt nghiệp của khoai • 2026",
-    "footer.quote": '"chúng ta tồn tại để thắc mắc về lí do tồn tại"',
+    "footer.quote": 'chúng ta tồn tại để thắc mắc về lí do tồn tại',
 
     "admin.title": "🥔 chỗ này của khoai, đừng có vô",
     "admin.passPlaceholder": "mật khẩu admin",
@@ -216,7 +216,7 @@ const translations: Record<Lang, Record<string, string>> = {
       "hey hey hey! email already got a secret code! go check your inbox (or spam), you greedy potato 🥔🧐",
 
     "footer.text": "🎓 made with luv for khoai's graduation • 2026",
-    "footer.quote": '"we exist to question the meaning of existence"',
+    "footer.quote": 'we exist to question the meaning of existence',
 
     "admin.title": "🥔 this is khoai's spot, don't come in",
     "admin.passPlaceholder": "admin password",
@@ -354,7 +354,7 @@ const translations: Record<Lang, Record<string, string>> = {
 
     "footer.text":
       "🎓 fait avec amour pour la remise des diplômes de khoai • 2026",
-    "footer.quote": '"nous existons pour questionner le sens de l\'existence."',
+    "footer.quote": 'nous existons pour questionner le sens de l\'existence',
 
     "admin.title": "🥔 c'est la place de khoai, n'entrez pas",
     "admin.passPlaceholder": "mot de passe admin",
