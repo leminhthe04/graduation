@@ -153,11 +153,11 @@ export default function CheckinForm() {
           className="px-6 mx-auto text-center"
           style={{ maxWidth: "var(--container-max)" }}
         >
-          <div className="max-w-[520px] mx-auto bg-white rounded-3xl p-9 max-md:p-8 shadow-[0_12px_60px_rgba(20,136,219,.15)] border-2 border-blue fade-in visible">
+          <div className="max-w-[520px] mx-auto glass-panel-heavy rounded-3xl p-9 max-md:p-8 fade-in visible">
             <div className="text-6xl mb-4 animate-pop-in">🎉</div>
             <h2 className="text-2xl font-black mb-4">{t('checkin.success')}</h2>
             <p className="mb-4">{t('checkin.yourCode')}</p>
-            <div className="relative text-2xl font-black tracking-[4px] text-navy bg-gray-light p-4 pr-11 rounded-2xl my-4 font-mono select-all text-left">
+            <div className="relative text-2xl font-black tracking-[4px] text-navy bg-white/70 backdrop-blur-sm p-4 pr-11 rounded-2xl my-4 font-mono select-all text-left border border-white/40">
               {result.code}
               <button
                 onClick={handleCopy}
@@ -179,7 +179,7 @@ export default function CheckinForm() {
               <br />
               {t('checkin.bringCode', { title: getField(result.settings.title, lang) })}
             </p>
-            <div className="mt-6 pt-6 border-t border-gray-200 font-semibold text-blue space-y-1">
+            <div className="mt-6 pt-6 border-t border-white/30 font-semibold text-blue space-y-1">
               <p>
                 📅 {result.settings.date} • ⏰ {result.settings.time}
               </p>
@@ -209,26 +209,26 @@ export default function CheckinForm() {
           {t('checkin.description')}
         </p>
 
-        {settings && (
+        {/* {settings && (
           <div className="text-center mb-8 fade-up">
-            <div className="inline-flex flex-wrap gap-4 items-center justify-center bg-gray-light rounded-2xl px-6 py-3 text-sm">
+            <div className="glass-panel inline-flex flex-wrap gap-4 items-center justify-center rounded-2xl px-6 py-3 text-sm">
               <span>
                 📅 {settings.date} • {settings.time}
               </span>
-              <span className="hidden sm:inline w-px h-4 bg-gray-300" />
+              <span className="hidden sm:inline w-px h-4 bg-white/30" />
               <span className="whitespace-pre-wrap">📍 {getField(settings.location, lang)}</span>
               {getField(settings.notes, lang) && (
                 <>
-                  <span className="hidden sm:inline w-px h-4 bg-gray-300" />
+                  <span className="hidden sm:inline w-px h-4 bg-white/30" />
                   <span className="whitespace-pre-wrap">📞 {getField(settings.notes, lang)}</span>
                 </>
               )}
             </div>
           </div>
-        )}
+        )} */}
 
         <form
-          className="max-w-[480px] mx-auto bg-white rounded-2xl p-10 max-md:p-6 shadow-[0_8px_40px_rgba(0,0,0,.06)] border border-black/[0.04] fade-up"
+          className="max-w-[480px] mx-auto glass-panel-heavy rounded-2xl p-10 max-md:p-6 fade-up"
           onSubmit={handleSubmit}
         >
           {error && (
@@ -238,32 +238,32 @@ export default function CheckinForm() {
           )}
 
           <div className="mb-6">
-            <label className="block mb-2 font-semibold text-sm">{t('checkin.nickname')}</label>
-            <input
-              type="text"
-              placeholder={t('checkin.nicknamePlaceholder')}
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-full font-sans text-base outline-none transition-all duration-300 bg-white focus:border-blue focus:shadow-[0_0_0_4px_rgba(20,136,219,.1)]"
-            />
+            <label className="block mb-2 font-semibold text-sm text-navy">{t('checkin.nickname')}</label>
+              <input
+                type="text"
+                placeholder={t('checkin.nicknamePlaceholder')}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input"
+              />
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 font-semibold text-sm">
+            <label className="block mb-2 font-semibold text-sm text-navy">
               {t('checkin.emailLabel')}
             </label>
-            <input
-              type="email"
-              placeholder={t('checkin.emailPlaceholder')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-full font-sans text-base outline-none transition-all duration-300 bg-white focus:border-blue focus:shadow-[0_0_0_4px_rgba(20,136,219,.1)]"
-            />
+              <input
+                type="email"
+                placeholder={t('checkin.emailPlaceholder')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 rounded-full font-sans text-base outline-none transition-all duration-300 glass-input"
+              />
           </div>
 
           <button
             type="submit"
-            className="w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold font-sans text-base cursor-pointer transition-all duration-300 bg-blue text-white hover:bg-navy hover:-translate-y-1 hover:shadow-[0_5px_15px_rgba(20,136,219,.45)] active:scale-95 disabled:opacity-50 disabled:pointer-events-none relative overflow-hidden"
+            className="glass-btn-primary w-full inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold font-sans text-base disabled:opacity-50 disabled:pointer-events-none"
             disabled={loading}
           >
             {loading ? t('checkin.loading') : t('checkin.getCode')}

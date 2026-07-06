@@ -223,10 +223,10 @@ export default function Gallery() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={handleSelect}
-          className={`relative border-2 border-dashed rounded-3xl p-4 text-center cursor-pointer transition-all duration-300 mb-10 max-w-2xl mx-auto bg-white ${
+          className={`relative border-2 border-dashed rounded-3xl p-4 text-center cursor-pointer transition-all duration-500 mb-10 max-w-2xl mx-auto ${
             dragging
-              ? "border-blue bg-blue/10 scale-[1.01]"
-              : "border-gray-400 hover:border-blue hover:bg-gray-50"
+              ? "border-blue bg-blue/10 scale-[1.01] glass-panel-heavy grayscale saturate-0 contrast-75 blur-[0.5px]"
+              : "border-white/30 hover:border-blue glass-panel hover:bg-white/50"
           }`}
         >
           <input
@@ -260,7 +260,7 @@ export default function Gallery() {
                   placeholder={t("gallery.nicknamePlaceholder")}
                   value={uploadNickname}
                   onChange={(e) => setUploadNickname(e.target.value)}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-full font-sans text-sm outline-none transition-all duration-300 bg-white focus:border-blue focus:shadow-[0_0_0_4px_rgba(20,136,219,.1)] max-w-[220px]"
+                  className="px-4 py-2 rounded-full font-sans text-sm outline-none transition-all duration-300 glass-input max-w-[220px]"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -272,7 +272,7 @@ export default function Gallery() {
                   value={uploadFeedback}
                   onChange={(e) => setUploadFeedback(e.target.value)}
                   rows={1}
-                  className="px-4 py-2 border-2 border-gray-200 rounded-full font-sans text-sm outline-none transition-all duration-300 bg-white focus:border-blue focus:shadow-[0_0_0_4px_rgba(20,136,219,.1)] w-[500px] resize-y"
+                  className="px-4 py-2 rounded-full font-sans text-sm outline-none transition-all duration-300 glass-input w-[500px] resize-y"
                 />
               </div>
             </div>
@@ -403,7 +403,7 @@ export default function Gallery() {
       )}
 
       {photos.length > 0 && viewMode === "carousel" && (
-        <div className="relative group/carousel px-6">
+        <div className="relative group/carousel px-6 md:pl-28 md:pr-28">
           <div
             ref={gridRef}
             className="flex overflow-x-auto py-20 select-none w-full [&::-webkit-scrollbar]:hidden"
@@ -457,29 +457,10 @@ export default function Gallery() {
               </div>
             ))}
           </div>
-
-          <button
-            onClick={() => {
-              const el = gridRef.current;
-              if (el) el.scrollBy({ left: -320, behavior: "smooth" });
-            }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-11 h-11 rounded-full bg-white shadow-lg border-none flex items-center justify-center text-lg cursor-pointer transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 hover:scale-110 active:scale-90"
-          >
-            ‹
-          </button>
-          <button
-            onClick={() => {
-              const el = gridRef.current;
-              if (el) el.scrollBy({ left: 320, behavior: "smooth" });
-            }}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-11 h-11 rounded-full bg-white shadow-lg border-none flex items-center justify-center text-lg cursor-pointer transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 hover:scale-110 active:scale-90"
-          >
-            ›
-          </button>
         </div>
       )}
       {photos.length > 0 && viewMode === "grid" && (
-        <div className="flex flex-wrap justify-center">
+        <div className="flex flex-wrap justify-center px-6 md:pl-25 md:pr-25">
           {photos.map((p) => (
             <div
               key={p.id}

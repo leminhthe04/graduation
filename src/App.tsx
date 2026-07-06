@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { I18nProvider } from './i18n'
 import Header from './components/Header'
+import LeftNav from './components/LeftNav'
 import Hero from './components/Hero'
 import Countdown from './components/Countdown'
 import Gallery from './components/Gallery'
@@ -14,6 +15,7 @@ export default function App() {
   return (
     <I18nProvider>
       <Header onAdminClick={() => setAdminOpen(true)} />
+      <LeftNav />
       <main>
         <Hero />
         <Countdown />
